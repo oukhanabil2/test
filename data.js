@@ -2618,3 +2618,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Attendre que app.js soit chargé
     setTimeout(loadAgentsData, 100);
 });
+
+// Exporter les données
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { agentsData, DATE_AFFECTATION_BASE };
+}
