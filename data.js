@@ -1,34 +1,7 @@
-// data.js - Base de données complète des agents CleanCo
-// Transformé depuis le fichier Python
+// data.js - DONNÉES DES AGENTS
+const DATE_AFFECTATION_BASE = "2025-11-01";
 
-// Constantes pour l'application
-const DATE_AFFECTATION_BASE = "2024-01-01";
-const JOURS_FRANCAIS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-
-const SHIFT_COLORS = {
-    '1': '#3498db',    // Bleu pour matin
-    '2': '#2ecc71',    // Vert pour après-midi
-    '3': '#9b59b6',    // Violet pour nuit
-    'R': '#f39c12',    // Orange pour repos
-    'C': '#e74c3c',    // Rouge pour congé
-    'M': '#e67e22',    // Orange foncé pour maladie
-    'A': '#95a5a6',    // Gris pour autre absence
-    '-': '#7f8c8d'     // Gris foncé pour non planifié
-};
-
-const SHIFT_LABELS = {
-    '1': 'Matin',
-    '2': 'Après-midi',
-    '3': 'Nuit',
-    'R': 'Repos',
-    'C': 'Congé',
-    'M': 'Maladie',
-    'A': 'Autre',
-    '-': 'Non planifié'
-};
-
-// Base de données complète des agents
-const agents = [
+const agentsData = [
     // Groupe A
     {
         code: 'CPA',
@@ -46,6 +19,8 @@ const agents = [
         date_sortie: null,
         statut: 'actif'
     },
+    
+        
     {
         code: 'CONA',
         nom: 'EL JAMALI',
@@ -2628,3 +2603,18 @@ console.log(`🔐 ${panicCodes.length} codes panique initialisés`);
 console.log(`📻 ${radios.length} radios initialisées`);
 console.log(`👔 ${uniforms.length} fiches habillement initialisées`);
 console.log(`⚠️ ${warnings.length} avertissements initialisés`);
+
+// Fonction pour charger les agents dans app.js
+function loadAgentsData() {
+    if (typeof agents !== 'undefined' && agents.length === 0) {
+        agents = agentsData;
+        saveData();
+        console.log("✅ Données agents chargées depuis data.js");
+    }
+}
+
+// Appeler automatiquement au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    // Attendre que app.js soit chargé
+    setTimeout(loadAgentsData, 100);
+});
