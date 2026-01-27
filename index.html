@@ -2,256 +2,271 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SGA - Système de Gestion des Agents</title>
+    
+    <!-- Police Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Feuille de style unique -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>">
+    
+    <!-- Manifest pour application PWA (optionnel) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    
+    <!-- Apple touch icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .app-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .app-header {
-            background: linear-gradient(to right, #2c3e50, #34495e);
-            color: white;
-            padding: 25px 30px;
-            text-align: center;
-        }
-        
-        .app-header h1 {
-            font-size: 28px;
-            margin-bottom: 5px;
-            letter-spacing: 1px;
-        }
-        
-        .app-header h2 {
-            font-size: 16px;
-            font-weight: normal;
-            color: #ecf0f1;
-            opacity: 0.9;
-        }
-        
-        .app-body {
-            display: flex;
-            min-height: 600px;
-        }
-        
-        .sidebar {
-            width: 250px;
-            background: #f8f9fa;
-            border-right: 1px solid #e9ecef;
-            padding: 20px;
-        }
-        
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            background: #fff;
-        }
-        
-        .menu-button-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .menu-button {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 18px 15px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .menu-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
-            border-color: #3498db;
-            background: #f8f9ff;
-        }
-        
-        .menu-section {
-            border-left: 5px solid #3498db;
-        }
-        
-        .quit-button {
-            border-left: 5px solid #e74c3c;
-            background: #fff5f5;
-        }
-        
-        .quit-button:hover {
-            border-color: #c0392b;
-        }
-        
-        /* Overlay et Popup */
-        .overlay {
+        /* Styles inline minimaux pour le chargement initial */
+        #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .overlay.visible {
-            display: flex;
-        }
-        
-        .popup {
-            background: white;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        .popup-header {
-            background: linear-gradient(to right, #3498db, #2980b9);
-            color: white;
-            padding: 20px;
-            border-radius: 10px 10px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .popup-header h2 {
-            margin: 0;
-            font-size: 22px;
-        }
-        
-        .popup-close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .popup-body {
-            padding: 25px;
-        }
-        
-        .popup-footer {
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 0 0 10px 10px;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-        
-        /* Table styles */
-        .planning-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .planning-table th, .planning-table td {
-            border: 1px solid #ddd;
-            padding: 12px 8px;
-            text-align: center;
-        }
-        
-        .planning-table th {
+            height: 100%;
             background: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
             color: white;
-            font-weight: 600;
-            position: sticky;
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        
+        /* Mode hors ligne */
+        #offline-notification {
+            display: none;
+            position: fixed;
             top: 0;
+            left: 0;
+            width: 100%;
+            background: #e74c3c;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            z-index: 10000;
+            font-weight: bold;
         }
         
-        .planning-table tr:nth-child(even) {
-            background: #f9f9f9;
+        #offline-notification.show {
+            display: block;
         }
         
-        .planning-table tr:hover {
-            background: #f1f8ff;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .app-body {
-                flex-direction: column;
+        /* Version imprimable */
+        @media print {
+            .no-print {
+                display: none !important;
             }
             
-            .sidebar {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #e9ecef;
+            body {
+                background: white !important;
+                color: black !important;
             }
             
-            .menu-button-container {
-                grid-template-columns: 1fr;
+            #app-container {
+                box-shadow: none !important;
+                max-width: 100% !important;
             }
+            
+            .app-header {
+                background: white !important;
+                color: black !important;
+                border-bottom: 2px solid black;
+            }
+            
+            .planning-table th {
+                background: #f0f0f0 !important;
+                color: black !important;
+                border: 1px solid black !important;
+            }
+            
+            .planning-table td {
+                border: 1px solid #ccc !important;
+            }
+            
+            .shift-1 { background: #d4e6ff !important; color: black !important; }
+            .shift-2 { background: #ffe0e0 !important; color: black !important; }
+            .shift-3 { background: #e8d4ff !important; color: black !important; }
+            .shift-R { background: #d4ffd4 !important; color: black !important; }
+            .shift-C { background: #fff0d4 !important; color: black !important; }
+            .shift-M { background: #ffedd4 !important; color: black !important; }
+            .shift-A { background: #f0f0f0 !important; color: black !important; }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="app-header">
-            <h1>SYSTÈME DE GESTION DES AGENTS</h1>
-            <h2 id="sub-title">Menu Principal</h2>
-        </div>
+    <!-- Écran de chargement initial -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text">Initialisation du SGA...</div>
+    </div>
+    
+    <!-- Notification hors ligne -->
+    <div id="offline-notification" class="no-print">
+        <i class="fas fa-wifi-slash"></i> Mode hors ligne - Données locales uniquement
+    </div>
+    
+    <!-- Conteneur principal -->
+    <div id="app-container">
+        <!-- En-tête -->
+        <header class="app-header no-print">
+            <h1 id="app-title">SGA - Système de Gestion des Agents</h1>
+            <p id="sub-title">MENU PRINCIPAL</p>
+            <div id="user-display" style="margin-top: 8px; font-size: 0.9em; color: #bdc3c7;">
+                <i class="fas fa-user-circle"></i> <span id="current-user">Administrateur</span>
+                <span id="user-role" class="role-badge role-admin" style="margin-left: 5px; font-size: 0.8em;">admin</span>
+            </div>
+        </header>
         
-        <div class="app-body">
-            <div class="main-content" id="main-content">
-                <!-- Le contenu dynamique sera inséré ici -->
+        <!-- Contenu principal -->
+        <main id="main-content">
+            <!-- Le contenu sera injecté dynamiquement -->
+            <div style="text-align: center; padding: 40px 20px; color: #95a5a6;">
+                <i class="fas fa-cog fa-spin fa-2x" style="margin-bottom: 20px;"></i>
+                <p>Chargement du système de gestion...</p>
+            </div>
+        </main>
+        
+        <!-- Pied de page -->
+        <footer class="no-print" style="background: #34495e; padding: 10px; text-align: center; font-size: 0.8em; color: #95a5a6; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 10px; flex-wrap: wrap;">
+                <span>SGA v1.0 Complète</span>
+                <span id="data-status" style="font-size: 0.8em;">
+                    <i class="fas fa-database"></i> <span id="data-count">0</span> agents
+                </span>
+                <span id="last-save" style="font-size: 0.8em;">
+                    <i class="far fa-clock"></i> <span id="save-time">Jamais</span>
+                </span>
+            </div>
+            <div style="margin-top: 5px; font-size: 0.75em; opacity: 0.7;">
+                © 2024 - Tous droits réservés
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Overlay pour popups -->
+    <div id="popup-overlay" class="overlay no-print">
+        <div id="popup-content" class="popup-content">
+            <div class="popup-header">
+                <h2 id="popup-title">Titre</h2>
+                <button id="popup-close-btn" class="popup-close-btn">&times;</button>
+            </div>
+            <div id="popup-body" class="popup-body">
+                <!-- Contenu dynamique -->
+            </div>
+            <div id="popup-footer" class="popup-footer">
+                <!-- Boutons dynamiques -->
             </div>
         </div>
     </div>
     
-    <!-- Overlay pour les popups -->
-    <div class="overlay" id="overlay">
-        <div class="popup">
-            <div id="popup-content">
-                <!-- Contenu popup dynamique -->
-            </div>
-        </div>
-    </div>
-   
-    <script src="data.js"></script>
-
-    <script src="app.js"></script>
+    <!-- Snackbar pour notifications -->
+    <div id="snackbar"></div>
+    
+    <!-- Script JavaScript principal -->
+    <script>
+        // Cacher l'écran de chargement
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                loadingScreen.style.opacity = '0';
+                setTimeout(function() {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 800);
+        });
+        
+        // Gestion du mode hors ligne
+        window.addEventListener('online', function() {
+            document.getElementById('offline-notification').classList.remove('show');
+        });
+        
+        window.addEventListener('offline', function() {
+            document.getElementById('offline-notification').classList.add('show');
+        });
+        
+        // Vérifier la connexion au chargement
+        if (!navigator.onLine) {
+            document.getElementById('offline-notification').classList.add('show');
+        }
+        
+        // Mettre à jour le compteur de données
+        function updateDataCount() {
+            try {
+                const agents = JSON.parse(localStorage.getItem('sga_agents') || '[]');
+                const count = agents.length;
+                document.getElementById('data-count').textContent = count;
+                
+                // Mettre à jour la dernière sauvegarde
+                const lastSave = localStorage.getItem('sga_lastBackup');
+                if (lastSave) {
+                    document.getElementById('save-time').textContent = lastSave;
+                }
+            } catch (e) {
+                console.log("Données non encore initialisées");
+            }
+        }
+        
+        // Surveiller les sauvegardes
+        setInterval(updateDataCount, 30000); // Toutes les 30 secondes
+        
+        // Initialiser au chargement
+        document.addEventListener('DOMContentLoaded', updateDataCount);
+        
+        // Service Worker pour PWA (optionnel)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').catch(err => {
+                    console.log('ServiceWorker non enregistré:', err);
+                });
+            });
+        }
+        
+        // Prévenir la fermeture accidentelle
+        window.addEventListener('beforeunload', function (e) {
+            // Ne pas afficher l'alerte en production pour une meilleure UX
+            // e.preventDefault();
+            // e.returnValue = '';
+        });
+    </script>
+    
+    <!-- Script de l'application -->
+    <script src="app_complete.js"></script>
+    
+    <!-- Script pour l'export PDF (optionnel - nécessite jsPDF) -->
+    <!--
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    -->
 </body>
 </html>
