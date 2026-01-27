@@ -3,7 +3,17 @@
 // Constantes
 const JOURS_FRANCAIS = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 const DATE_AFFECTATION_BASE = "2025-11-01";
-
+// Ajoutez ces constantes au début du fichier (après JOURS_FRANCAIS)
+const SHIFT_LABELS = {
+    '1': 'Matin',
+    '2': 'Après-midi',
+    '3': 'Nuit',
+    'R': 'Repos',
+    'C': 'Congé',
+    'M': 'Maladie',
+    'A': 'Autre absence',
+    '-': 'Non défini'
+};
 // Variables globales
 let agents = [];
 let planningData = {};
@@ -690,3 +700,352 @@ function showSnackbar(message) {
 updateDataCount();
 
 console.log("✅ SGA version minimale chargée");
+// FONCTION POUR LE PLANNING (version complète)
+function displayMonthlyPlanning() {
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    const mainContent = document.getElementById('main-content');
+    document.getElementById('sub-title').textContent = 
+        `PLANNING - ${getMonthName(month)} ${year}`;
+    
+    let html = `
+        <div style="margin-bottom: 20px; text-align: center;">
+            <button class="action-btn blue" onclick="changePlanningMonth(-1)">
+                <i class="fas fa-chevron-left"></i> Mois précédent
+            </button>
+            <span style="margin: 0 15px; font-weight: bold; font-size: 1.2em;">
+                ${getMonthName(month)} ${year}
+            </span>
+            <button class="action-btn blue" onclick="changePlanningMonth(1)">
+                Mois suivant <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table class="planning-table">
+                <thead>
+                    <tr>
+                        <th style="min-width: 120px;">Agent</th>
+    `;
+    
+    // En-têtes des jours
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month - 1, day);
+        const jourSemaine = JOURS_FRANCAIS[date.getDay()];
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        
+        html += `
+            <th class="${isWeekend ? 'weekend' : ''}" style="min-width: 40px;">
+                ${jourSemaine}<br>${day}
+            </th>
+        `;
+    }
+    
+    html += `
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    // Lignes des agents
+    agents.forEach(agent => {
+        if (agent.statut !== 'actif') return;
+        
+        html += `
+            <tr>
+                <td style="text-align: left; padding: 5px;">
+                    <strong>${agent.code}</strong><br>
+                    <small>${agent.prenom} ${agent.nom}</small>
+                </td>
+        `;
+        
+        // Cellules des jours
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month - 1, day);
+            const dateStr = date.toISOString().split('T')[0];
+            const shift = getShiftForAgent(agent.code, dateStr);
+            
+            html += `
+                <td class="shift-cell" 
+                    style="background: ${getShiftColor(shift)}; 
+                           color: white; 
+                           cursor: pointer;"
+                    onclick="editShift('${agent.code}', '${dateStr}')"
+                    title="${agent.code} - ${dateStr}">
+                    ${shift || '-'}
+                </td>
+            `;
+        }
+        
+        html += `</tr>`;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #34495e; border-radius: 8px;">
+            <h3 style="margin-top: 0;">Légende</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 20px; height: 20px; background: #3498db; margin-right: 5px;"></div>
+                    <span>Matin (1)</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 20px; height: 20px; background: #e74c3c; margin-right: 5px;"></div>
+                    <span>Après-midi (2)</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 20px; height: 20px; background: #9b59b6; margin-right: 5px;"></div>
+                    <span>Nuit (3)</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 20px; height: 20px; background: #2ecc71; margin-right: 5px;"></div>
+                    <span>Repos (R)</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 20px; height: 20px; background: #f39c12; margin-right: 5px;"></div>
+                    <span>Congé (C)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <button class="menu-button" onclick="showMassEditor()">
+                <i class="fas fa-edit"></i> Éditeur en masse
+            </button>
+            <button class="menu-button back-button" onclick="displayMainMenu()" style="margin-left: 10px;">
+                <i class="fas fa-arrow-left"></i> Retour
+            </button>
+        </div>
+    `;
+    
+    mainContent.innerHTML = html;
+}
+
+// Fonctions utilitaires pour le planning
+function getShiftForAgent(agentCode, dateStr) {
+    const monthKey = dateStr.substring(0, 7); // YYYY-MM
+    if (planningData[monthKey] && 
+        planningData[monthKey][agentCode] && 
+        planningData[monthKey][agentCode][dateStr]) {
+        return planningData[monthKey][agentCode][dateStr].shift || '-';
+    }
+    return '-';
+}
+
+function getShiftColor(shift) {
+    const colors = {
+        '1': '#3498db',  // Matin - bleu
+        '2': '#e74c3c',  // Après-midi - rouge
+        '3': '#9b59b6',  // Nuit - violet
+        'R': '#2ecc71',  // Repos - vert
+        'C': '#f39c12',  // Congé - orange
+        'M': '#e67e22',  // Maladie - orange foncé
+        'A': '#95a5a6',  // Autre - gris
+        '-': '#34495e'   // Non défini
+    };
+    return colors[shift] || '#34495e';
+}
+
+function editShift(agentCode, dateStr) {
+    const currentShift = getShiftForAgent(agentCode, dateStr);
+    const agent = agents.find(a => a.code === agentCode);
+    
+    if (!agent) return;
+    
+    openPopup(
+        `Modifier shift - ${agentCode} - ${dateStr}`,
+        `
+        <div style="padding: 15px;">
+            <div class="info-item">
+                <span class="info-label">Agent:</span>
+                <span class="info-value">${agent.prenom} ${agent.nom} (${agent.groupe})</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date:</span>
+                <span class="info-value">${dateStr}</span>
+            </div>
+            
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Shift:</label>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px;">
+                    ${Object.entries({
+                        '1': {label: 'Matin', color: '#3498db'},
+                        '2': {label: 'Après-midi', color: '#e74c3c'},
+                        '3': {label: 'Nuit', color: '#9b59b6'},
+                        'R': {label: 'Repos', color: '#2ecc71'},
+                        'C': {label: 'Congé', color: '#f39c12'},
+                        'M': {label: 'Maladie', color: '#e67e22'},
+                        'A': {label: 'Autre', color: '#95a5a6'},
+                        '-': {label: 'Non défini', color: '#34495e'}
+                    }).map(([value, data]) => `
+                        <button type="button" 
+                                class="shift-option ${currentShift === value ? 'selected' : ''}"
+                                data-value="${value}"
+                                style="padding: 10px; background: ${data.color}; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            ${data.label} (${value})
+                        </button>
+                    `).join('')}
+                </div>
+                <input type="hidden" id="selectedShift" value="${currentShift}">
+            </div>
+            
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Commentaire (optionnel):</label>
+                <textarea id="shiftComment" class="form-input" rows="3" placeholder="Note..."></textarea>
+            </div>
+        </div>
+        `,
+        `
+        <button class="popup-button green" onclick="saveShift('${agentCode}', '${dateStr}')">Enregistrer</button>
+        <button class="popup-button gray" onclick="closePopup()">Annuler</button>
+        `
+    );
+    
+    // Gérer la sélection des shifts
+    document.querySelectorAll('.shift-option').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.shift-option').forEach(b => b.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('selectedShift').value = this.dataset.value;
+        });
+    });
+}
+
+function saveShift(agentCode, dateStr) {
+    const shift = document.getElementById('selectedShift').value;
+    const comment = document.getElementById('shiftComment').value;
+    const monthKey = dateStr.substring(0, 7);
+    
+    // Initialiser les structures si nécessaire
+    if (!planningData[monthKey]) planningData[monthKey] = {};
+    if (!planningData[monthKey][agentCode]) planningData[monthKey][agentCode] = {};
+    
+    // Sauvegarder le shift
+    planningData[monthKey][agentCode][dateStr] = {
+        shift: shift,
+        modified: new Date().toISOString(),
+        modifiedBy: currentUser.username,
+        comment: comment || null
+    };
+    
+    saveData();
+    closePopup();
+    displayMonthlyPlanning();
+    showSnackbar(`Shift ${shift} enregistré pour ${agentCode}`);
+}
+
+function showMassEditor() {
+    openPopup(
+        'Éditeur en masse',
+        `
+        <div style="padding: 15px;">
+            <p>Sélectionnez une période et un shift à appliquer à plusieurs agents.</p>
+            
+            <div class="form-group">
+                <label>Date de début:</label>
+                <input type="date" id="massStart" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+            </div>
+            
+            <div class="form-group">
+                <label>Date de fin:</label>
+                <input type="date" id="massEnd" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+            </div>
+            
+            <div class="form-group">
+                <label>Shift:</label>
+                <select id="massShift" class="form-input">
+                    <option value="1">Matin (1)</option>
+                    <option value="2">Après-midi (2)</option>
+                    <option value="3">Nuit (3)</option>
+                    <option value="R">Repos (R)</option>
+                    <option value="C">Congé (C)</option>
+                    <option value="M">Maladie (M)</option>
+                    <option value="A">Autre (A)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Agents (Groupe):</label>
+                <select id="massGroup" class="form-input">
+                    <option value="ALL">Tous les groupes</option>
+                    <option value="A">Groupe A</option>
+                    <option value="B">Groupe B</option>
+                    <option value="C">Groupe C</option>
+                    <option value="D">Groupe D</option>
+                    <option value="E">Groupe E</option>
+                </select>
+            </div>
+        </div>
+        `,
+        `
+        <button class="popup-button green" onclick="applyMassEdit()">Appliquer</button>
+        <button class="popup-button gray" onclick="closePopup()">Annuler</button>
+        `
+    );
+}
+
+function applyMassEdit() {
+    const startDate = document.getElementById('massStart').value;
+    const endDate = document.getElementById('massEnd').value;
+    const shift = document.getElementById('massShift').value;
+    const group = document.getElementById('massGroup').value;
+    
+    if (!startDate || !endDate) {
+        showSnackbar("Veuillez sélectionner une période");
+        return;
+    }
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Filtrer les agents
+    let selectedAgents = agents.filter(a => a.statut === 'actif');
+    if (group !== 'ALL') {
+        selectedAgents = selectedAgents.filter(a => a.groupe === group);
+    }
+    
+    let modifications = 0;
+    
+    // Appliquer à chaque agent
+    selectedAgents.forEach(agent => {
+        let currentDate = new Date(start);
+        
+        while (currentDate <= end) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const monthKey = dateStr.substring(0, 7);
+            
+            // Initialiser
+            if (!planningData[monthKey]) planningData[monthKey] = {};
+            if (!planningData[monthKey][agent.code]) planningData[monthKey][agent.code] = {};
+            
+            // Appliquer le shift
+            planningData[monthKey][agent.code][dateStr] = {
+                shift: shift,
+                modified: new Date().toISOString(),
+                modifiedBy: currentUser.username,
+                massEdit: true
+            };
+            
+            modifications++;
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+    });
+    
+    saveData();
+    closePopup();
+    displayMonthlyPlanning();
+    showSnackbar(`${modifications} shifts appliqués à ${selectedAgents.length} agents`);
+}
+
+function changePlanningMonth(delta) {
+    // Pour l'instant, juste une notification
+    showSnackbar(`Navigation mois ${delta > 0 ? 'suivant' : 'précédent'} - Fonctionnalité complète à implémenter`);
+}
+
+
